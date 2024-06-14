@@ -8,8 +8,17 @@ import { PgManyToManyPreset } from "@graphile-contrib/pg-many-to-many";
 // import { PgSimplifyInflectionPreset } from "@graphile/simplify-inflection";
 import PersistedPlugin from "@grafserv/persisted";
 import { PgOmitArchivedPlugin } from "@graphile-contrib/pg-omit-archived";
+import { makeWrapPlansPlugin } from "postgraphile/utils";
 
 // For configuration file details, see: https://postgraphile.org/postgraphile/next/config
+
+const customPlugin = makeWrapPlansPlugin({
+	Mutation: {
+		updateUserAccount: (plan) => {
+			return plan();
+		}
+	}
+})
 
 /** @satisfies {GraphileConfig.Preset} */
 const preset = {
@@ -25,7 +34,7 @@ const preset = {
     PgAggregatesPreset,
     // PgSimplifyInflectionPreset
   ],
-  plugins: [PersistedPlugin.default, PgOmitArchivedPlugin],
+  plugins: [customPlugin],
   pgServices: [
     makePgService({
       // Database connection string:
@@ -33,12 +42,12 @@ const preset = {
       // List of schemas to expose:
       schemas: process.env.DATABASE_SCHEMAS?.split(",") ?? ["public"],
       // Enable LISTEN/NOTIFY:
-      pubsub: true,
+      pubsub: false,
     }),
   ],
   grafserv: {
     port: 5678,
-    websockets: true,
+    websockets: false,
     allowUnpersistedOperation: true,
   },
   grafast: {
